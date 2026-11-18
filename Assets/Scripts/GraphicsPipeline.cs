@@ -111,6 +111,7 @@ public class GraphicsPipeline : MonoBehaviour
             new Vector4(5.65f, -6.18f, -57.55f, -56.92f), new Vector4(3.40f, -1.11f, -57.66f, -57.03f)
         };
 
+        //LineClipping Test
         foreach (Vector4 p in pts)
         {
             float xp = p.x / -p.z;   // x divided by z (minus sign because the plane is z = -1)
@@ -127,6 +128,19 @@ public class GraphicsPipeline : MonoBehaviour
             print("Accepted Start =" + S.ToString() + "End = " + E.ToString());
         }
         else print("Rejected");
+
+
+        //Besh Test
+        Vector2Int bs = new Vector2Int(49, 23);
+        Vector2Int be = new Vector2Int(30, 30);
+
+        print("Bresenham Start = " + bs.ToString() + " End = " + be.ToString());
+
+        List<Vector2Int> linePoints = bresh(bs, be);
+        foreach (Vector2Int point in linePoints)
+        {
+            print(point);
+        }
     }
 
 
@@ -155,7 +169,66 @@ public class GraphicsPipeline : MonoBehaviour
         return result;
     }
 
+    List<Vector2Int> bresh(Vector2Int s, Vector2Int e)
+    {
+        List<Vector2Int> result = new List<Vector2Int>();
 
+        int dx = e.x - s.x;
+
+        if (dx < 0)
+        {
+            return bresh(e, s);
+        }
+
+        int dy = e.y - s.y;
+
+        if(dy < 0)
+        {
+            return NegY(bresh(NegY(s), NegY(e)));
+        }
+
+        int negative = 2 * (dy - dx); //orange
+        int positive = 2 * dy;        //yellow
+        int p = 2 * dy - dx;          //green
+
+        int x = s.x;
+        int y = s.y;
+
+        result.Add(new Vector2Int(x, y));
+
+        while (x < e.x)
+        {
+            x++;
+
+            if (p < 0)
+            {
+                p += positive;
+            }
+            else
+            {
+                y++;
+                p += negative;
+            }
+            result.Add(new Vector2Int(x, y));
+        }
+
+        return result;
+    }
+
+    private List<Vector2Int> NegY(List<Vector2Int> vector2Ints)
+    {
+        List<Vector2Int> result = new List<Vector2Int>();
+        foreach (Vector2Int v in vector2Ints)
+            result.Add(NegY(v));
+            
+
+            return result;
+    }
+
+    private Vector2Int NegY(Vector2Int s)
+    {
+        return new Vector2Int(s.x, -s.y);
+    }
 
     bool LineClip(ref Vector2 S, ref Vector2 E)
     {
