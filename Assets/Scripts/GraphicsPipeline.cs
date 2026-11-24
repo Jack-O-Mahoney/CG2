@@ -131,8 +131,8 @@ public class GraphicsPipeline : MonoBehaviour
 
 
         //Besh Test
-        Vector2Int bs = new Vector2Int(49, 23);
-        Vector2Int be = new Vector2Int(30, 30);
+        Vector2Int bs = new Vector2Int(15, 20);
+        Vector2Int be = new Vector2Int(23, 30);
 
         print("Bresenham Start = " + bs.ToString() + " End = " + be.ToString());
 
@@ -187,6 +187,11 @@ public class GraphicsPipeline : MonoBehaviour
             return NegY(bresh(NegY(s), NegY(e)));
         }
 
+        if (dy > dx)
+        {
+            return SwapXY(bresh(SwapXY(s), SwapXY(e)));
+        }
+
         int negative = 2 * (dy - dx); //orange
         int positive = 2 * dy;        //yellow
         int p = 2 * dy - dx;          //green
@@ -213,6 +218,20 @@ public class GraphicsPipeline : MonoBehaviour
         }
 
         return result;
+    }
+
+    private List<Vector2Int> SwapXY(List<Vector2Int> vector2Ints)
+    {
+        List<Vector2Int> result = new List<Vector2Int>();
+        foreach (Vector2Int v in vector2Ints)
+            result.Add(SwapXY(v));
+
+        return result;
+    }
+
+    private Vector2Int SwapXY(Vector2Int s)
+    {
+        return new Vector2Int(s.y, s.x);
     }
 
     private List<Vector2Int> NegY(List<Vector2Int> vector2Ints)
