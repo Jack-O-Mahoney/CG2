@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class GraphicsPipeline : MonoBehaviour
 {
+    public GameObject ScreenGO;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -130,17 +131,23 @@ public class GraphicsPipeline : MonoBehaviour
         else print("Rejected");
 
 
+
+
+        Texture2D Screen = new Texture2D(1024, 1024);
         //Besh Test
-        Vector2Int bs = new Vector2Int(15, 20);
-        Vector2Int be = new Vector2Int(23, 30);
+        Vector2Int bs = new Vector2Int(512, 512);
+        Vector2Int be = new Vector2Int(1023, 1023);
 
         print("Bresenham Start = " + bs.ToString() + " End = " + be.ToString());
 
         List<Vector2Int> linePoints = bresh(bs, be);
         foreach (Vector2Int point in linePoints)
         {
-            print(point);
+            Screen.SetPixel(point.x, point.y,Color.red);
         }
+
+        ScreenGO.GetComponent<Renderer>().material.mainTexture=Screen;
+        Screen.Apply();
     }
 
 
@@ -348,9 +355,69 @@ public class GraphicsPipeline : MonoBehaviour
         foreach (Vector4 v in verts) { print(v); }
     }
 
+    Vector4 Proj1(Vector4 v)
+    {
+        return new Vector4(v.x / v.w,v.y/v.w,v.z,v.w);
+    }
+
+    Vector2Int Pixelize(Vector4 v)
+    {
+        return new Vector2Int(Mathf.RoundToInt((v.x + 1)* 1023/2),Mathf.RoundToInt((v.y + 1) * 1023 / 2));
+    }
+
+
+
+
     // Update is called once per frame
     void Update()
     {
-        
+        Matrix4x4 World = Matrix4x4.TRS(new Vector3(0, 0, 10), Quaternion.identity, Vector3.one);
+        Matrix4x4 View = Matrix4x4.LookAt(Vector3.zero, new Vector3(0, 0, 10), Vector3.up);
+        Matrix4x4 Proj = Matrix4x4.Perspective(90, 1, 1, 1000);
+        Matrix4x4 Super = Proj * View * World;
+
+        Model mymodel = new Model();
+        List<Vector4> verts = Homog(mymodel.vertices);
+        List<Vector4> Transformed = MatrixTransform(Super, verts);
+
+        List<Vector2Int> Pixels = new List<Vector2Int>();
+        foreach (Vector4 v in Transformed)
+        {
+            Pixels.Add(Pixelize(Proj1(v)));
+
+        }
+
+
+
+        Vector3Int Face = mymodel.faces[0];
+        Vector2Int v1 = Pixels[Face.x];
+        Vector2Int v2 = Pixels[Face.y];
+        Vector2Int v3 = Pixels[Face.z];
+
+        Texture2D Screen = new Texture2D(1024, 1024);
+
+
+        //DrawLine(Screen, v1, v2);
+        //DrawLine(Screen, v2, v3);
+        //DrawLine(Screen, v3, v1);
+
+        foreach (Vector3Int f in mymodel.faces)
+        {
+            DrawLine(Screen, Pixels[f.x], Pixels[f.y]);
+            DrawLine(Screen, Pixels[f.y], Pixels[f.z]);
+            DrawLine(Screen, Pixels[f.z], Pixels[f.x]);
+        }
+
+        ScreenGO.GetComponent<Renderer>().material.mainTexture = Screen;
+        Screen.Apply();
+    }
+
+    private void DrawLine(Texture2D Screen, Vector2Int bs, Vector2Int be)
+    {
+        List<Vector2Int> linePoints = bresh(bs, be);
+        foreach (Vector2Int point in linePoints)
+        {
+            Screen.SetPixel(point.x, point.y, Color.red);
+        }
     }
 }
